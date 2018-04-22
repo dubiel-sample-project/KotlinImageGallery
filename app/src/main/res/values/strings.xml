@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">KotlinImageGallery</string>
+    <string name="json_file">images.json</string>
+</resources>
