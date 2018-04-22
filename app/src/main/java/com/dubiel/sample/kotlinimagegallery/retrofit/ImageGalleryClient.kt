@@ -1,6 +1,7 @@
 package com.dubiel.sample.kotlinimagegallery.retrofit
 
 import android.content.Context
+import com.dubiel.sample.kotlinimagegallery.GalleryImages
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

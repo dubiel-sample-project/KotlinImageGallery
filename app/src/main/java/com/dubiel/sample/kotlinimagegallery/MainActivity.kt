@@ -9,6 +9,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.widget.GridLayout
 
 
 data class GalleryImage(var name : String)
@@ -24,21 +25,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val layoutManager = GridLayoutManager(this, 3)
-        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                return if (position == 0) 2 else 1
-            }
-        }
+        val gl : GridLayout = findViewById(R.id.grid_layout_main)
+
+//        val layoutManager = GridLayoutManager(this, 3)
+//        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+//            override fun getSpanSize(position: Int): Int {
+//                return if (position == 0) 2 else 1
+//            }
+//        }
 
         ImageGalleryClient(this).getImages()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ images ->
 //                    val gridView: GridView = findViewById(R.id.gridview)
-                    val recyclerView : RecyclerView = findViewById(R.id.recyclerview)
-                    recyclerView.layoutManager = layoutManager
-                    recyclerView.adapter = ImageGalleryViewAdapter(this, images.items)
+//                    val recyclerView : RecyclerView = findViewById(R.id.recyclerview)
+//                    recyclerView.layoutManager = layoutManager
+//                    recyclerView.adapter = ImageGalleryViewAdapter(this, images.items)
 //                    gridView = findViewById(R.id.gridview)
 //                    gridView.adapter = ImageAdapter(this, images.items)
 //
