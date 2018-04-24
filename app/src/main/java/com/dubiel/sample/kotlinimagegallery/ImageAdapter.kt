@@ -19,17 +19,17 @@ class ImageAdapter (private val mContext : Context, private val images: Array<Ga
                 0, 1, 2 -> {
                     when(position) {
                         1, 2 -> {
-                            imageView = inflater.inflate(R.layout.grid_item_small, parent, false) as ImageView
+                            imageView = inflater.inflate(R.layout.grid_item, parent, false) as ImageView
 //                            imageView.layoutParams = ViewGroup.LayoutParams(170, 170)
                         }
                         else -> {
-                            imageView = inflater.inflate(R.layout.grid_item_large, parent, false) as ImageView
+                            imageView = inflater.inflate(R.layout.grid_item, parent, false) as ImageView
 //                            imageView.layoutParams = ViewGroup.LayoutParams(170, 170)
                         }
                     }
                 }
                 else -> {
-                    imageView = inflater.inflate(R.layout.grid_item_small, parent, false) as ImageView
+                    imageView = inflater.inflate(R.layout.grid_item, parent, false) as ImageView
 //                    imageView.layoutParams = ViewGroup.LayoutParams(85, 85)
                 }
             }

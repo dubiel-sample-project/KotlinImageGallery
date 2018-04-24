@@ -21,8 +21,8 @@ class ImageGalleryViewAdapter(private val mContext : Context, private val images
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageGalleryViewHolder {
         val inflater = parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = if(viewType == 0) inflater.inflate(R.layout.grid_item_large, parent, false) else
-            inflater.inflate(R.layout.grid_item_small, parent, false)
+        val view = if(viewType == 0) inflater.inflate(R.layout.grid_item, parent, false) else
+            inflater.inflate(R.layout.grid_item, parent, false)
         return ImageGalleryViewHolder(view)
     }
 
@@ -34,7 +34,7 @@ class ImageGalleryViewAdapter(private val mContext : Context, private val images
         internal var mImageView: ImageView
 
         init {
-            mImageView = itemView.findViewById(R.id.grid_item_image)
+            mImageView = itemView.findViewById(R.id.image_view)
         }
     }
 }

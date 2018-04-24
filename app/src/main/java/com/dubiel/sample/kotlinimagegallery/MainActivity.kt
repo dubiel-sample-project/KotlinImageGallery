@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ images ->
                     gridLayout.addView(getGridItem(images.items.first().name,
-                            resources.displayMetrics.widthPixels / 3 * 2,
+                            resources.displayMetrics.widthPixels / 3 * 2 - 10,
                             null,
                             2,
                             2))
@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
                                 view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
                                 images.items.drop(1).forEach { image ->
                                     gridLayout.addView(getGridItem(image.name,
-                                            resources.displayMetrics.widthPixels / 3,
-                                            view.getHeight() / 2,
+                                            resources.displayMetrics.widthPixels / 3 - 10,
+                                            view.getHeight() / 2 - 5,
                                             1,
                                             1))
                                 }
@@ -85,7 +85,20 @@ class MainActivity : AppCompatActivity() {
         param.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, colspan)
         itemView.setLayoutParams(param)
 
-        itemView.setOnClickListener()
+        itemView.setOnClickListener(object : View.OnClickListener {
+            override fun onClick(v: View?) {
+                System.out.println(name)
+                val ft = fragmentManager.beginTransaction()
+                val prev = fragmentManager.findFragmentByTag("dialog")
+                if (prev != null) {
+                    ft.remove(prev)
+                }
+                ft.addToBackStack(null)
+
+                val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance()
+                newFragment.show(ft, "dialog")
+            }
+        })
 
         return itemView
     }
