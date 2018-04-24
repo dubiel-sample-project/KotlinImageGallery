@@ -5,14 +5,14 @@ import android.os.Bundle
 import com.dubiel.sample.kotlinimagegallery.retrofit.ImageGalleryClient
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
-//import android.support.v7.widget.GridLayoutManager
-//import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.support.v7.widget.GridLayout
 import android.widget.ImageView
 import android.view.Gravity
 import android.widget.ScrollView
+import android.view.ViewTreeObserver
+
 
 data class GalleryImage(var name : String)
 data class GalleryImages(var items: Array<GalleryImage>)
@@ -35,20 +35,30 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ images ->
-                    val view = getGridItem(images.items.first().name,
+                    gridLayout.addView(getGridItem(images.items.first().name,
                             resources.displayMetrics.widthPixels / 3 * 2,
                             null,
                             2,
-                            2)
-                    gridLayout.addView(view)
+                            2))
 
-                    images.items.drop(1).forEach { image ->
-                        gridLayout.addView(getGridItem(image.name,
-                                resources.displayMetrics.widthPixels / 3,
-                                view.layoutParams.height / 2,
-                                1,
-                                1))
+                    val view : View = gridLayout.getChildAt(0)
+
+                    val viewTreeObserver = view.getViewTreeObserver()
+                    if (viewTreeObserver.isAlive()) {
+                        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                            override fun onGlobalLayout() {
+                                view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                                images.items.drop(1).forEach { image ->
+                                    gridLayout.addView(getGridItem(image.name,
+                                            resources.displayMetrics.widthPixels / 3,
+                                            view.getHeight() / 2,
+                                            1,
+                                            1))
+                                }
+                            }
+                        })
                     }
+
 //                    System.out.println(images.javaClass.toString())
 //                    System.out.println(images.items.size)
                 })
@@ -74,6 +84,8 @@ class MainActivity : AppCompatActivity() {
         param.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, rowspan)
         param.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, colspan)
         itemView.setLayoutParams(param)
+
+        itemView.setOnClickListener()
 
         return itemView
     }
