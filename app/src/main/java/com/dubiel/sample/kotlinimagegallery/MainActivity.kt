@@ -1,5 +1,6 @@
 package com.dubiel.sample.kotlinimagegallery
 
+import android.content.ClipData
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.dubiel.sample.kotlinimagegallery.retrofit.ImageGalleryClient
@@ -16,6 +17,15 @@ import android.view.ViewTreeObserver
 
 data class GalleryImage(var name : String)
 data class GalleryImages(var items: Array<GalleryImage>)
+
+//class LongPressListener : View.OnLongClickListener {
+//    override public onLongClick(val view : View) {
+//        val data : ClipData = ClipData.newPlainText("", "");
+//        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
+//        view.startDrag(data, shadowBuilder, view, 0);
+//        view.setVisibility(View.INVISIBLE);
+//        return true;
+//    }
 
 class MainActivity : AppCompatActivity() {
     val TAG = MainActivity::class.java.getSimpleName()
@@ -50,8 +60,8 @@ class MainActivity : AppCompatActivity() {
                                 view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
                                 images.items.drop(1).forEach { image ->
                                     gridLayout.addView(getGridItem(image.name,
-                                            resources.displayMetrics.widthPixels / 3 - 10,
-                                            view.getHeight() / 2 - 5,
+                                            resources.displayMetrics.widthPixels / 3 - 8,
+                                            view.getHeight() / 2 - 2,
                                             1,
                                             1))
                                 }
@@ -87,16 +97,20 @@ class MainActivity : AppCompatActivity() {
 
         itemView.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-                System.out.println(name)
-                val ft = fragmentManager.beginTransaction()
-                val prev = fragmentManager.findFragmentByTag("dialog")
-                if (prev != null) {
-                    ft.remove(prev)
-                }
-                ft.addToBackStack(null)
+//                val ft = fragmentManager.beginTransaction()
+//                val prev = fragmentManager.findFragmentByTag("dialog")
+//                if (prev != null) {
+//                    ft.remove(prev)
+//                }
+//                ft.addToBackStack(null)
 
-                val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance()
-                newFragment.show(ft, "dialog")
+                val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance(
+                        resources.getIdentifier(name, "drawable", packageName))
+//                newFragment.show(ft, "dialog")
+
+                val fm = fragmentManager
+//                val dialogFragment = ImageDialogFragment()
+                newFragment.show(fm, "Dialog Fragment")
             }
         })
 
