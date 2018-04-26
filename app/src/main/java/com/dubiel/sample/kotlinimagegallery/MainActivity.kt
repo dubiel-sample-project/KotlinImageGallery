@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var gridLayout: GridLayout
 //    var subscription: Subscription? = null
 
-    class ImageViewOnDrawListener : View.OnDragListener {
+    class ViewOnDragListener : View.OnDragListener {
         override fun onDrag(v: View?, event: DragEvent?): Boolean {
             val action : Int? = event?.action;
 
@@ -148,9 +148,8 @@ class MainActivity : AppCompatActivity() {
                 newFragment.show(fm, "Dialog Fragment")
             }
         })
-        itemView.setOnLongClickListener(object : View.OnLongClickListener {
-            override fun onLongClick(v: View?): Boolean {
-//                val item : ClipData.Item = ClipData.Item("");
+        itemView.setOnTouchListener(object : View.OnTouchListener {
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 val dragData : ClipData = ClipData.newPlainText("index", gridLayout.indexOfChild(v).toString())
                 val shadowBuilder : View.DragShadowBuilder = View.DragShadowBuilder(v);
                 v?.startDrag(dragData, shadowBuilder, v, 0);
@@ -158,7 +157,7 @@ class MainActivity : AppCompatActivity() {
                 return true;
             }
         })
-        itemView.setOnDragListener(ImageViewOnDrawListener())
+        itemView.setOnDragListener(ViewOnDragListener())
 
         return itemView
     }
