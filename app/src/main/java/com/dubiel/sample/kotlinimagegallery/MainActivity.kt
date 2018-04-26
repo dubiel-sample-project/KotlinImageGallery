@@ -1,36 +1,77 @@
 package com.dubiel.sample.kotlinimagegallery
 
 import android.content.ClipData
+import android.content.ClipDescription
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.dubiel.sample.kotlinimagegallery.retrofit.ImageGalleryClient
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
-import android.view.LayoutInflater
-import android.view.View
 import android.support.v7.widget.GridLayout
+import android.view.*
 import android.widget.ImageView
-import android.view.Gravity
 import android.widget.ScrollView
-import android.view.ViewTreeObserver
+import android.graphics.PorterDuff
 
 
 data class GalleryImage(var name : String)
 data class GalleryImages(var items: Array<GalleryImage>)
 
-//class LongPressListener : View.OnLongClickListener {
-//    override public onLongClick(val view : View) {
-//        val data : ClipData = ClipData.newPlainText("", "");
-//        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
-//        view.startDrag(data, shadowBuilder, view, 0);
-//        view.setVisibility(View.INVISIBLE);
-//        return true;
-//    }
-
 class MainActivity : AppCompatActivity() {
     val TAG = MainActivity::class.java.getSimpleName()
     lateinit var gridLayout: GridLayout
 //    var subscription: Subscription? = null
+
+    class ImageViewOnDrawListener : View.OnDragListener {
+        override fun onDrag(v: View?, event: DragEvent?): Boolean {
+            val action : Int? = event?.action;
+
+            when(action) {
+                DragEvent.ACTION_DRAG_STARTED -> {
+                    if(event.clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                        val iv : ImageView? = v?.findViewById(R.id.image_view)
+                        iv?.setColorFilter(Color.BLUE, PorterDuff.Mode.LIGHTEN)
+                        iv?.invalidate()
+                        return true
+                    }
+                    return false
+                }
+                DragEvent.ACTION_DRAG_ENTERED -> {
+                    val iv : ImageView? = v?.findViewById(R.id.image_view)
+                    iv?.setColorFilter(Color.GREEN, PorterDuff.Mode.LIGHTEN)
+                    iv?.invalidate()
+                    return true
+                }
+                DragEvent.ACTION_DRAG_LOCATION -> return true
+                DragEvent.ACTION_DRAG_EXITED -> {
+                    val iv : ImageView? = v?.findViewById(R.id.image_view)
+                    iv?.setColorFilter(Color.BLUE, PorterDuff.Mode.LIGHTEN)
+                    iv?.invalidate()
+                    return true
+                }
+                DragEvent.ACTION_DROP -> {
+                    val item = event.clipData.getItemAt(0)
+                    System.out.println("source: " + item.text)
+
+                    val target : View = event.localState as View
+                    System.out.println("target: " + target)
+
+                    val iv : ImageView? = v?.findViewById(R.id.image_view)
+                    iv?.clearColorFilter()
+                    iv?.invalidate()
+                    return true
+                }
+                DragEvent.ACTION_DRAG_ENDED -> {
+                    val iv : ImageView? = v?.findViewById(R.id.image_view)
+                    iv?.clearColorFilter()
+                    iv?.invalidate()
+                    return true
+                }
+            }
+            return false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +109,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         })
                     }
-
-//                    System.out.println(images.javaClass.toString())
-//                    System.out.println(images.items.size)
                 })
     }
 
@@ -82,9 +120,7 @@ class MainActivity : AppCompatActivity() {
         imageView.setImageResource(resources.getIdentifier(name, "drawable", packageName))
 
         var param = GridLayout.LayoutParams()
-//        param.width = GridLayout.LayoutParams.WRAP_CONTENT
         param.width = width
-//        param.height = GridLayout.LayoutParams.WRAP_CONTENT
         if(height != null) {
             param.height = height
         }
@@ -106,13 +142,23 @@ class MainActivity : AppCompatActivity() {
 
                 val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance(
                         resources.getIdentifier(name, "drawable", packageName))
-//                newFragment.show(ft, "dialog")
 
                 val fm = fragmentManager
 //                val dialogFragment = ImageDialogFragment()
                 newFragment.show(fm, "Dialog Fragment")
             }
         })
+        itemView.setOnLongClickListener(object : View.OnLongClickListener {
+            override fun onLongClick(v: View?): Boolean {
+//                val item : ClipData.Item = ClipData.Item("");
+                val dragData : ClipData = ClipData.newPlainText("index", gridLayout.indexOfChild(v).toString())
+                val shadowBuilder : View.DragShadowBuilder = View.DragShadowBuilder(v);
+                v?.startDrag(dragData, shadowBuilder, v, 0);
+                v?.setVisibility(View.INVISIBLE);
+                return true;
+            }
+        })
+        itemView.setOnDragListener(ImageViewOnDrawListener())
 
         return itemView
     }
