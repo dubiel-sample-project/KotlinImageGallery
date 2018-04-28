@@ -13,6 +13,7 @@ import android.view.*
 import android.widget.ImageView
 import android.widget.ScrollView
 import android.graphics.PorterDuff
+import android.support.v7.widget.CardView
 
 
 data class GalleryImage(var name : String)
@@ -31,6 +32,8 @@ class MainActivity : AppCompatActivity() {
                 DragEvent.ACTION_DRAG_STARTED -> {
                     if(event.clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
                         val iv : ImageView? = v?.findViewById(R.id.image_view)
+//                        val cv : CardView? = v as CardView
+//                        cv?.setCardBackgroundColor(Color.TRANSPARENT)
                         iv?.setColorFilter(Color.BLUE, PorterDuff.Mode.LIGHTEN)
                         iv?.invalidate()
                         return true
@@ -51,21 +54,48 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
                 DragEvent.ACTION_DROP -> {
-                    val item = event.clipData.getItemAt(0)
-                    System.out.println("source: " + item.text)
-
-                    val target : View = event.localState as View
-                    System.out.println("target: " + target)
+//                    val item = event.clipData.getItemAt(0)
 
                     val iv : ImageView? = v?.findViewById(R.id.image_view)
                     iv?.clearColorFilter()
                     iv?.invalidate()
+
+//                    val cv : CardView? = v as CardView
+//                    cv?.setCardBackgroundColor(Color.WHITE)
+//                    cv?.invalidate()
+
+                    val source : View = event.localState as View
+                    val gl : GridLayout = source.parent as GridLayout
+
+                    System.out.println("source index: " + gl.indexOfChild(source))
+                    System.out.println("target index: " + gl.indexOfChild(v))
+
+                    gl.removeView(source)
+                    gl.addView(source, gl.indexOfChild(v))
+
+                    v?.setVisibility(View.VISIBLE);
+                    source?.setVisibility(View.VISIBLE);
+
                     return true
                 }
                 DragEvent.ACTION_DRAG_ENDED -> {
                     val iv : ImageView? = v?.findViewById(R.id.image_view)
                     iv?.clearColorFilter()
                     iv?.invalidate()
+
+                    System.out.println("drag result: " + event.result)
+                    val source : View = event.localState as View
+                    System.out.println("source: " + source)
+
+//                    val cv : CardView? = v as CardView
+//                    cv?.setCardBackgroundColor(Color.WHITE)
+//                    cv?.invalidate()
+
+//                    source?.setVisibility(View.VISIBLE);
+                    v?.setVisibility(View.VISIBLE);
+
+//                    if(event.result) {
+//                    }
                     return true
                 }
             }
@@ -112,6 +142,27 @@ class MainActivity : AppCompatActivity() {
                 })
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        val id = item.itemId
+        System.out.println("menu id: " + id)
+
+//        when (id) {
+//            R.id.action_refresh -> doSearch(MapManager.getInstance().getCurrentCategory(), MapManager.getInstance().getCurrentDateRange())
+//            R.id.action_heatmap -> MapManager.getInstance().onHeatMapClick()
+//            else -> return super.onOptionsItemSelected(item)
+//        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     fun getGridItem(name: String, width: Int, height: Int?, rowspan: Int, colspan: Int) : View  {
         val inflater : LayoutInflater = LayoutInflater.from(this)
         val itemView : View = inflater.inflate(R.layout.grid_item, gridLayout, false)
@@ -148,15 +199,16 @@ class MainActivity : AppCompatActivity() {
                 newFragment.show(fm, "Dialog Fragment")
             }
         })
-        itemView.setOnTouchListener(object : View.OnTouchListener {
-            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-                val dragData : ClipData = ClipData.newPlainText("index", gridLayout.indexOfChild(v).toString())
+        itemView.setOnLongClickListener(object : View.OnLongClickListener {
+            override fun onLongClick(v: View?): Boolean {
+                val dragData : ClipData = ClipData.newPlainText("", "")
                 val shadowBuilder : View.DragShadowBuilder = View.DragShadowBuilder(v);
                 v?.startDrag(dragData, shadowBuilder, v, 0);
                 v?.setVisibility(View.INVISIBLE);
                 return true;
             }
         })
+
         itemView.setOnDragListener(ViewOnDragListener())
 
         return itemView
