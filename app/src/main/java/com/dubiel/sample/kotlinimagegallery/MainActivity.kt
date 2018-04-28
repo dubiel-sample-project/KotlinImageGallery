@@ -18,7 +18,6 @@ import android.support.v7.widget.CardView
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.bumptech.glide.Glide
 import com.squareup.picasso.Picasso
 
 
@@ -41,8 +40,6 @@ class MainActivity : AppCompatActivity() {
                 DragEvent.ACTION_DRAG_STARTED -> {
                     if(event.clipDescription.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
                         val iv : ImageView? = v?.findViewById(R.id.image_view)
-//                        val cv : CardView? = v as CardView
-//                        cv?.setCardBackgroundColor(Color.TRANSPARENT)
                         iv?.setColorFilter(Color.BLUE, PorterDuff.Mode.LIGHTEN)
                         iv?.invalidate()
                         return true
@@ -69,18 +66,41 @@ class MainActivity : AppCompatActivity() {
                     iv?.clearColorFilter()
                     iv?.invalidate()
 
-//                    val cv : CardView? = v as CardView
-//                    cv?.setCardBackgroundColor(Color.WHITE)
-//                    cv?.invalidate()
-
                     val source : View = event.localState as View
                     val gl : GridLayout = source.parent as GridLayout
 
                     System.out.println("source index: " + gl.indexOfChild(source))
                     System.out.println("target index: " + gl.indexOfChild(v))
 
-                    gl.removeView(source)
-                    gl.addView(source, gl.indexOfChild(v))
+                    if(gl.indexOfChild(v) == 0) {
+                        System.out.println("replacing first view")
+
+                        var param1 = GridLayout.LayoutParams()
+                        param1.width = source!!.width
+                        param1.height = source!!.height
+                        param1.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
+                        param1.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
+                        v?.setLayoutParams(param1)
+
+                        gl.removeView(source)
+
+                        var param2 = GridLayout.LayoutParams()
+                        param2.width = v!!.width
+                        param2.height = v!!.height
+                        param2.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
+                        param2.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
+                        source.setLayoutParams(param2)
+
+                        gl.addView(source, 0)
+                    } else if(gl.indexOfChild(source) == 0) {
+
+                    } else {
+                        gl.removeView(source)
+                        gl.addView(source, gl.indexOfChild(v))
+
+                        gl.removeView(v);
+                        gl.addView(v, gl.indexOfChild(source))
+                    }
 
                     v?.setVisibility(View.VISIBLE);
                     source?.setVisibility(View.VISIBLE);
@@ -96,11 +116,6 @@ class MainActivity : AppCompatActivity() {
                     val source : View = event.localState as View
                     System.out.println("source: " + source)
 
-//                    val cv : CardView? = v as CardView
-//                    cv?.setCardBackgroundColor(Color.WHITE)
-//                    cv?.invalidate()
-
-//                    source?.setVisibility(View.VISIBLE);
                     v?.setVisibility(View.VISIBLE);
 
 //                    if(event.result) {
@@ -133,8 +148,6 @@ class MainActivity : AppCompatActivity() {
                             2,
                             2))
 
-//                    val view : View = mGridLayout.getChildAt(0)
-
                     images.items.drop(1).forEach { image ->
                         mGridLayout.addView(getGridItem("file:///android_asset/" + image.name + ".jpg",
                                 mGridItemWidth - 8,
@@ -142,23 +155,6 @@ class MainActivity : AppCompatActivity() {
                                 1,
                                 1))
                     }
-
-//                    val viewTreeObserver = view.getViewTreeObserver()
-//                    if (viewTreeObserver.isAlive()) {
-//                        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-//                            override fun onGlobalLayout() {
-//                                view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-////                                mGridItemHeight = view.getHeight() / 2
-//                                images.items.drop(1).forEach { image ->
-//                                    mGridLayout.addView(getGridItem(image.name,
-//                                            mGridItemWidth - 12,
-//                                            mGridItemHeight / 2,
-//                                            1,
-//                                            1))
-//                                }
-//                            }
-//                        })
-//                    }
                 })
     }
 
@@ -169,7 +165,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-        System.out.println("menu id: " + id)
 
         when (id) {
             R.id.action_add_image -> {
@@ -189,14 +184,23 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if(resultCode == Activity.RESULT_OK) {
             if(requestCode == SELECT_IMAGE) {
-                val itemView : CardView = getGridItem(data?.data.toString(), mGridItemWidth - 8,
-                        mGridItemHeight / 2, 1, 1) as CardView
-                val imageView: ImageView = itemView.findViewById(R.id.image_view)
-
+                val itemView : CardView = getGridItem(data?.data.toString(), mGridItemWidth * 2 - 12,
+                        mGridItemHeight, 2, 2) as CardView
                 try {
+                    val imageView: ImageView = itemView.findViewById(R.id.image_view)
                     Picasso.with(applicationContext).load(data?.data.toString())
                             .into(imageView)
-                    mGridLayout.addView(itemView)
+                    val firstView : View = mGridLayout.getChildAt(0)
+                    val secondView : View = mGridLayout.getChildAt(1)
+
+                    var param1 = GridLayout.LayoutParams()
+                    param1.width = secondView!!.width
+                    param1.height = secondView!!.height
+                    param1.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
+                    param1.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
+                    firstView.setLayoutParams(param1)
+
+                    mGridLayout.addView(itemView, 0)
                 } catch (e: Exception) {
                     Log.i(TAG, "error " + e.message)
                 }
@@ -210,9 +214,7 @@ class MainActivity : AppCompatActivity() {
 
         var param = GridLayout.LayoutParams()
         param.width = width
-        if(height != null) {
-            param.height = height
-        }
+        param.height = height
         param.rightMargin = 5
         param.topMargin = 5
         param.setGravity(Gravity.CENTER)
