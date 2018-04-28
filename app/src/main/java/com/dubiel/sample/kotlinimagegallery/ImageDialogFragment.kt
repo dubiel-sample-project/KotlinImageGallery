@@ -4,21 +4,19 @@ import android.app.Dialog
 import android.app.DialogFragment
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
-import android.view.ViewGroup
-import android.view.LayoutInflater
-import android.view.View
-import android.view.Window
+import android.view.*
 import android.widget.ImageView
-
+import com.squareup.picasso.Picasso
 
 
 class ImageDialogFragment : DialogFragment() {
-    internal var mIdentifier: Int = 0
+    internal var mUri: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mIdentifier = getArguments().getInt("identifier")
+        mUri = getArguments().getString("uri")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -26,7 +24,9 @@ class ImageDialogFragment : DialogFragment() {
         val view = inflater.inflate(R.layout.fragment_dialog, container, false)
         val image : ImageView = view.findViewById(R.id.image)
 
-        image.setImageResource(mIdentifier)
+        Picasso.with(activity).load(Uri.parse(mUri))
+                        .resize(resources.displayMetrics.widthPixels, 0)
+                .into(image)
 
         return view
     }
@@ -40,11 +40,11 @@ class ImageDialogFragment : DialogFragment() {
     }
 
     companion object {
-        internal fun newInstance(identifier : Int): ImageDialogFragment {
+        internal fun newInstance(uri : String): ImageDialogFragment {
             val f = ImageDialogFragment()
 
             val args = Bundle()
-            args.putInt("identifier", identifier)
+            args.putString("uri", uri)
             f.setArguments(args)
 
             return f

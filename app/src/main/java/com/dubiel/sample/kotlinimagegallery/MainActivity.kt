@@ -1,5 +1,6 @@
 package com.dubiel.sample.kotlinimagegallery
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipDescription
 import android.graphics.Color
@@ -14,6 +15,11 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import android.graphics.PorterDuff
 import android.support.v7.widget.CardView
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
+import com.bumptech.glide.Glide
+import com.squareup.picasso.Picasso
 
 
 data class GalleryImage(var name : String)
@@ -21,8 +27,11 @@ data class GalleryImages(var items: Array<GalleryImage>)
 
 class MainActivity : AppCompatActivity() {
     val TAG = MainActivity::class.java.getSimpleName()
-    lateinit var gridLayout: GridLayout
-//    var subscription: Subscription? = null
+    val SELECT_IMAGE = 1
+
+    lateinit var mGridLayout: GridLayout
+    var mGridItemWidth : Int = 0
+    var mGridItemHeight : Int = 0
 
     class ViewOnDragListener : View.OnDragListener {
         override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -110,35 +119,46 @@ class MainActivity : AppCompatActivity() {
         val scrollView: ScrollView = findViewById(R.id.scroll_view)
         scrollView.setSmoothScrollingEnabled(true)
 
-        gridLayout = findViewById(R.id.grid_layout)
+        mGridItemWidth = resources.displayMetrics.widthPixels / 3
+        mGridItemHeight = resources.displayMetrics.heightPixels / 2
+        mGridLayout = findViewById(R.id.grid_layout)
 
         ImageGalleryClient(this).getImages()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ images ->
-                    gridLayout.addView(getGridItem(images.items.first().name,
-                            resources.displayMetrics.widthPixels / 3 * 2 - 10,
-                            null,
+                    mGridLayout.addView(getGridItem("file:///android_asset/" + images.items.first().name + ".jpg",
+                            mGridItemWidth * 2 - 12,
+                            mGridItemHeight,
                             2,
                             2))
 
-                    val view : View = gridLayout.getChildAt(0)
+//                    val view : View = mGridLayout.getChildAt(0)
 
-                    val viewTreeObserver = view.getViewTreeObserver()
-                    if (viewTreeObserver.isAlive()) {
-                        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                            override fun onGlobalLayout() {
-                                view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-                                images.items.drop(1).forEach { image ->
-                                    gridLayout.addView(getGridItem(image.name,
-                                            resources.displayMetrics.widthPixels / 3 - 8,
-                                            view.getHeight() / 2 - 2,
-                                            1,
-                                            1))
-                                }
-                            }
-                        })
+                    images.items.drop(1).forEach { image ->
+                        mGridLayout.addView(getGridItem("file:///android_asset/" + image.name + ".jpg",
+                                mGridItemWidth - 8,
+                                mGridItemHeight / 2,
+                                1,
+                                1))
                     }
+
+//                    val viewTreeObserver = view.getViewTreeObserver()
+//                    if (viewTreeObserver.isAlive()) {
+//                        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+//                            override fun onGlobalLayout() {
+//                                view.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+////                                mGridItemHeight = view.getHeight() / 2
+//                                images.items.drop(1).forEach { image ->
+//                                    mGridLayout.addView(getGridItem(image.name,
+//                                            mGridItemWidth - 12,
+//                                            mGridItemHeight / 2,
+//                                            1,
+//                                            1))
+//                                }
+//                            }
+//                        })
+//                    }
                 })
     }
 
@@ -148,27 +168,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
         System.out.println("menu id: " + id)
 
-//        when (id) {
-//            R.id.action_refresh -> doSearch(MapManager.getInstance().getCurrentCategory(), MapManager.getInstance().getCurrentDateRange())
-//            R.id.action_heatmap -> MapManager.getInstance().onHeatMapClick()
-//            else -> return super.onOptionsItemSelected(item)
-//        }
+        when (id) {
+            R.id.action_add_image -> {
+                val intent = Intent()
+                intent.type = "image/*"
+                intent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(Intent.createChooser(intent, "Select Image"), SELECT_IMAGE)
+            }
+            R.id.action_delete -> System.out.println("delete image")
+            else -> return super.onOptionsItemSelected(item)
+        }
 
         return super.onOptionsItemSelected(item)
     }
 
-    fun getGridItem(name: String, width: Int, height: Int?, rowspan: Int, colspan: Int) : View  {
-        val inflater : LayoutInflater = LayoutInflater.from(this)
-        val itemView : View = inflater.inflate(R.layout.grid_item, gridLayout, false)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode == Activity.RESULT_OK) {
+            if(requestCode == SELECT_IMAGE) {
+                val itemView : CardView = getGridItem(data?.data.toString(), mGridItemWidth - 8,
+                        mGridItemHeight / 2, 1, 1) as CardView
+                val imageView: ImageView = itemView.findViewById(R.id.image_view)
 
-        val imageView : ImageView = itemView.findViewById(R.id.image_view)
-        imageView.setImageResource(resources.getIdentifier(name, "drawable", packageName))
+                try {
+                    Picasso.with(applicationContext).load(data?.data.toString())
+                            .into(imageView)
+                    mGridLayout.addView(itemView)
+                } catch (e: Exception) {
+                    Log.i(TAG, "error " + e.message)
+                }
+            }
+        }
+    }
+
+    fun getGridItem(uri: String, width: Int, height: Int, rowspan: Int, colspan: Int) : View  {
+        val inflater : LayoutInflater = LayoutInflater.from(this)
+        val itemView : View = inflater.inflate(R.layout.grid_item, mGridLayout, false)
 
         var param = GridLayout.LayoutParams()
         param.width = width
@@ -184,18 +222,9 @@ class MainActivity : AppCompatActivity() {
 
         itemView.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-//                val ft = fragmentManager.beginTransaction()
-//                val prev = fragmentManager.findFragmentByTag("dialog")
-//                if (prev != null) {
-//                    ft.remove(prev)
-//                }
-//                ft.addToBackStack(null)
-
-                val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance(
-                        resources.getIdentifier(name, "drawable", packageName))
+                val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance(uri)
 
                 val fm = fragmentManager
-//                val dialogFragment = ImageDialogFragment()
                 newFragment.show(fm, "Dialog Fragment")
             }
         })
@@ -210,6 +239,10 @@ class MainActivity : AppCompatActivity() {
         })
 
         itemView.setOnDragListener(ViewOnDragListener())
+
+        val imageView: ImageView = itemView.findViewById(R.id.image_view)
+            Picasso.with(applicationContext).load(Uri.parse(uri))
+                    .into(imageView)
 
         return itemView
     }
