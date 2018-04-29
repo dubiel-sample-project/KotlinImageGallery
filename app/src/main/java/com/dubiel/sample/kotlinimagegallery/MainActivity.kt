@@ -168,16 +168,10 @@ class MainActivity : AppCompatActivity() {
                     val imageView: ImageView = itemView.findViewById(R.id.image_view)
                     Picasso.with(applicationContext).load(data?.data.toString())
                             .into(imageView)
-                    val firstView : View = mGridLayout.getChildAt(0)
-
-//                    val secondView : View = mGridLayout.getChildAt(1)
-//                    param1.width = secondView!!.width
-//                    param1.height = secondView!!.height
-                    firstView.setLayoutParams(getGridLayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT, 1, 1))
-
+                    mGridLayout.getChildAt(0).setLayoutParams(getGridLayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT, 1, 1))
                     mGridLayout.addView(itemView, 0)
                 } catch (e: Exception) {
-                    Log.i(TAG, "error " + e.message)
+                    Log.i(TAG, "error loading new image, " + e.message)
                 }
             }
         }
@@ -203,22 +197,19 @@ class MainActivity : AppCompatActivity() {
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 when(event?.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        handler.postDelayed(runnable, 200)
+                        handler.postDelayed(runnable, 150)
                     }
                     MotionEvent.ACTION_UP -> {
                         v?.setVisibility(View.VISIBLE)
-                        if(event.eventTime - event.downTime < 200) {
+                        if(event.eventTime - event.downTime < 150) {
                             handler.removeCallbacks(runnable)
                             val newFragment : ImageDialogFragment = ImageDialogFragment.newInstance(uri)
                             val fm = fragmentManager
                             newFragment.show(fm, "Dialog Fragment")
                         }
                     }
-                    MotionEvent.ACTION_SCROLL -> System.out.println("ACTION_SCROLL")
-                    MotionEvent.ACTION_MOVE -> {
-//                        System.out.println("ACTION_MOVE")
-//                        handler.removeCallbacks(runnable)
-                    }
+                    MotionEvent.ACTION_SCROLL -> return false
+                    MotionEvent.ACTION_MOVE -> return false
                     else -> {
                         handler.removeCallbacks(runnable)
                     }
@@ -226,15 +217,6 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         })
-//        itemView.setOnLongClickListener(object : View.OnLongClickListener {
-//            override fun onLongClick(v: View?): Boolean {
-//                val dragData : ClipData = ClipData.newPlainText("", "")
-//                val shadowBuilder : View.DragShadowBuilder = View.DragShadowBuilder(v);
-//                v?.startDrag(dragData, shadowBuilder, v, 0);
-//                v?.setVisibility(View.INVISIBLE);
-//                return true;
-//            }
-//        })
 
         val deleteIcon: ImageView = itemView.findViewById(R.id.delete_icon)
         rescaleDeleteIcon(itemView)
@@ -242,6 +224,9 @@ class MainActivity : AppCompatActivity() {
         deleteIcon.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
                 if(mDeleteIconVisible) {
+                    if(mGridLayout.indexOfChild(itemView) == 0) {
+                        mGridLayout.getChildAt(1).setLayoutParams(getGridLayoutParams(GRID_ITEM_LARGE_WIDTH, GRID_ITEM_LARGE_HEIGHT, 2, 2))
+                    }
                     mGridLayout.removeView(itemView)
                 }
             }
@@ -280,65 +265,34 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
                 DragEvent.ACTION_DROP -> {
-//                    val item = event.clipData.getItemAt(0)
-
                     val iv : ImageView? = v?.findViewById(R.id.image_view)
                     iv?.clearColorFilter()
                     iv?.invalidate()
 
                     val source : View = event.localState as View
                     val gl : GridLayout = source.parent as GridLayout
-
-                    System.out.println("source index: " + gl.indexOfChild(source))
-                    System.out.println("target index: " + gl.indexOfChild(v))
-
+//
                     if(gl.indexOfChild(v) == 0) {
-                        System.out.println("replacing first view")
-
-//                        var param1 = GridLayout.LayoutParams()
-//                        param1.width = source!!.width
-//                        param1.height = source!!.height
-//                        param1.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
-//                        param1.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
                         v?.setLayoutParams(getGridLayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT, 1, 1))
-
-                        gl.removeView(source)
-
-//                        var param2 = GridLayout.LayoutParams()
-//                        param2.width = v!!.width
-//                        param2.height = v!!.height
-//                        param2.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
-//                        param2.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
                         source.setLayoutParams(getGridLayoutParams(GRID_ITEM_LARGE_WIDTH, GRID_ITEM_LARGE_HEIGHT, 2, 2))
 
+                        gl.removeView(source)
                         gl.addView(source, 0)
-//                        rescaleDeleteIcon(source)
                     } else if(gl.indexOfChild(source) == 0) {
-                        val secondView : View = gl.getChildAt(1)
-
-//                        var param1 = GridLayout.LayoutParams()
-//                        param1.width = v!!.width
-//                        param1.height = v!!.height
-//                        param1.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
-//                        param1.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1)
+                        gl.getChildAt(1).setLayoutParams(getGridLayoutParams(GRID_ITEM_LARGE_WIDTH, GRID_ITEM_LARGE_HEIGHT, 2, 2))
                         source?.setLayoutParams(getGridLayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT, 1, 1))
 
                         gl.removeView(source)
-
-//                        var param2 = GridLayout.LayoutParams()
-//                        param2.width = v!!.width
-//                        param2.height = v!!.height
-//                        param2.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
-//                        param2.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 2)
-//                        source.setLayoutParams(param2)
-
-                        gl.addView(source, gl.indexOfChild(v))
+                        gl.addView(source, gl.indexOfChild(v) + 1)
                     } else {
-                        gl.removeView(source)
-                        gl.addView(source, gl.indexOfChild(v))
+                        val viewIndex : Int = gl.indexOfChild(v)
+                        val sourceIndex : Int = gl.indexOfChild(source)
 
-                        gl.removeView(v);
-                        gl.addView(v, gl.indexOfChild(source))
+                        gl.removeView(source)
+                        gl.addView(source, viewIndex)
+
+                        gl.removeView(v)
+                        gl.addView(v, sourceIndex)
                     }
 
                     v?.setVisibility(View.VISIBLE);
@@ -362,9 +316,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-//                    if(!event.result) {
+                    if(!event.result) {
                         handler.postDelayed(runnable, 100)
-//                    }
+                    }
 
                     v?.setVisibility(View.VISIBLE);
                     return true
