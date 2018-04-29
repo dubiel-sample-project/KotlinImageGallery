@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity() {
 
                     val source : View = event.localState as View
                     val gl : GridLayout = source.parent as GridLayout
-//
+
                     if(gl.indexOfChild(v) == 0) {
                         v?.setLayoutParams(getGridLayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT, 1, 1))
                         source.setLayoutParams(getGridLayoutParams(GRID_ITEM_LARGE_WIDTH, GRID_ITEM_LARGE_HEIGHT, 2, 2))
